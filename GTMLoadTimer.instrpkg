@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+ Copyright 2018 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+
+<!-- Instruments Developer Help: https://help.apple.com/instruments/developer/mac/current/ -->
+<package>
+  <id>com.google.instruments.loadtimer</id>
+  <version>1</version>
+  <title>GTMLoadTimer</title>
+  <owner>
+    <name>Dave MacLachlan</name>
+  </owner>
+  <note>
+    Monitors +load messages. Requires that apps link with the GTMLoadTimer framework.
+  </note>
+
+  <!-- MARK: Schema Definitions -->
+  <os-signpost-interval-schema>
+    <id>com-google-instruments-class-load-messages</id>
+    <title>+load Message</title>
+    <purpose>
+      Monitors +load messages.
+    </purpose>
+    <subsystem>"com.google.instruments.loadtimer"</subsystem>
+    <category>"performance"</category>
+    <name>"load"</name>
+    <start-pattern>
+      <message>"class: " ?class</message>
+    </start-pattern>
+    <end-pattern>
+      <raw-message>?ignored</raw-message>
+    </end-pattern>
+    <duration-column>
+      <mnemonic>duration</mnemonic>
+      <title>Duration</title>
+      <type>duration</type>
+    </duration-column>
+    <column>
+      <mnemonic>class</mnemonic>
+      <title>Class</title>
+      <type>raw-string</type>
+      <expression>?class</expression>
+    </column>
+  </os-signpost-interval-schema>
+
+  <os-signpost-interval-schema>
+    <id>com-google-instruments-class-load-swizzler</id>
+    <title>+load Swizzler</title>
+    <purpose>
+      Monitors swizzler instrumenting +load messages. This is just to be aware of the overhead
+      incurred by the GTMLoadTimer framework itself at startup time.
+    </purpose>
+    <subsystem>"com.google.instruments.loadtimer"</subsystem>
+    <category>"performance"</category>
+    <name>"swizzler"</name>
+    <start-pattern>
+      <message>"file: " ?file</message>
+    </start-pattern>
+    <end-pattern>
+      <raw-message>?ignored</raw-message>
+    </end-pattern>
+    <duration-column>
+      <mnemonic>duration</mnemonic>
+      <title>Duration</title>
+      <type>duration</type>
+    </duration-column>
+    <column>
+      <mnemonic>file</mnemonic>
+      <title>File</title>
+      <type>file-path</type>
+      <expression>?file</expression>
+    </column>
+  </os-signpost-interval-schema>
+
+  <!-- MARK: Instrument Definitions -->
+  <instrument>
+    <id>com.google.instruments.loadtimer.loads</id>
+    <title>+load messages</title>
+    <category>Behavior</category>
+    <purpose>Measures +load messages.</purpose>
+    <icon>Generic</icon>
+    <create-table>
+      <id>load</id>
+      <schema-ref>com-google-instruments-class-load-messages</schema-ref>
+    </create-table>
+    <create-table>
+      <id>swizzler</id>
+      <schema-ref>com-google-instruments-class-load-swizzler</schema-ref>
+    </create-table>
+    <graph>
+      <title>+load messages</title>
+      <lane>
+        <title>+load messages</title>
+        <table-ref>load</table-ref>
+        <plot>
+          <value-from>class</value-from>
+        </plot>
+      </lane>
+      <lane>
+        <title>+load swizzler</title>
+        <table-ref>swizzler</table-ref>
+        <base-color>Purple</base-color>
+        <plot>
+          <value-from>file</value-from>
+        </plot>
+      </lane>
+    </graph>
+    <aggregation>
+      <title>Summary: +load</title>
+      <table-ref>load</table-ref>
+      <hierarchy>
+        <level>
+          <column>class</column>
+        </level>
+      </hierarchy>
+      <column>
+        <title>Duration</title>
+        <sum>duration</sum>
+      </column>
+    </aggregation>
+    <aggregation>
+      <title>Summary: swizzler</title>
+      <table-ref>swizzler</table-ref>
+      <hierarchy>
+        <level>
+          <column>file</column>
+        </level>
+      </hierarchy>
+      <column>
+        <title>Duration</title>
+        <sum>duration</sum>
+      </column>
+    </aggregation>
+    <list>
+      <title>List: +load</title>
+      <table-ref>load</table-ref>
+      <column>start</column>
+      <column>duration</column>
+      <column>class</column>
+    </list>
+    <list>
+      <title>List: swizzler</title>
+      <table-ref>swizzler</table-ref>
+      <column>start</column>
+      <column>duration</column>
+      <column>file</column>
+    </list>
+  </instrument>
+</package>
